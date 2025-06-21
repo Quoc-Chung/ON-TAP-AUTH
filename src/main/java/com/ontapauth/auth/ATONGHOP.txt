@@ -1,0 +1,112 @@
+
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.11.5</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-impl</artifactId>
+    <version>0.11.5</version>
+    <scope>runtime</scope>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-jackson</artifactId>
+    <version>0.11.5</version>
+    <scope>runtime</scope>
+</dependency>
+====================================================================================================
+Mã hóa đối xứng dùng thuật toán HMAC-SHA256 (HS256).
+
+- Cấu hình file JWT UTils:
+
++ Cấu hình secret key + thời gian có hiệu lực của token
+private static final String SECRET_KEY = "your-secret-key-here-1234567890-1234567890-1234567890";
+private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60; // 5 giờ
+
++ Hàm tạo khóa ký (signing key)
+
+private Key getSigningKey() {
+    byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+    return Keys.hmacShaKeyFor(keyBytes);
+}
+
++ Hàm tạo token:
+
+public String generateToken(UserDetails userDetails)
+
+private String doGenerateToken(Map<String, Object> claims, String subject) {
+    return Jwts.builder()
+            .setClaims(claims)
+            .setSubject(subject)
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
+            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+            .compact();
+}
+
+
++ Hàm giải mã (Trích xuất thông tin từ token):
+
+public String getUsernameFromToken(String token)
+public Date getExpirationDateFromToken(String token)
+
+public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver)
+
+- Để lấy bất ki thông tin nào từ Claims (Dữ liệu bên trong token)
+
+getAllClaimsFromToken(token) phân tích token và trả về toàn bộ nội dung.
+
+
++ Hàm kiểm tra token hết hạn :
+
+
++ Hàm xác thực token :
+
+public Boolean validateToken(String token, UserDetails userDetails)
+
+So sánh username trong token với UserDetails.
+Kiểm tra xem token có hết hạn chưa.
+
+
+
+SECRET_KEY và JWT_TOKEN_VALIDITY	Khai báo giá trị cấu hình cơ bản
+2	getSigningKey()	Chuẩn bị khóa dùng để ký và xác thực
+3	generateToken(UserDetails)	Tạo token từ thông tin đăng nhập
+4	doGenerateToken(...)	Cấu hình nội dung bên trong JWT
+5	getClaimFromToken()	Trích xuất các thông tin từ JWT
+6	isTokenExpired()	Kiểm tra token còn hạn không
+7	validateToken()	Xác thực token: đúng người và chưa hết hạn
+==============================================================================================================
+
+- Cấu trúc của một cái JWT TOKEN này gồm 3 cái:
+
++ Header :
+
++ Payload
+
++ Chữ kí số:
+
+
+-- ROLE
+INSERT INTO roles (id, name) VALUES (1, 'ADMIN');
+INSERT INTO roles (id, name) VALUES (2, 'NHANVIEN');
+INSERT INTO roles (id, name) VALUES (3, 'USER');
+
+-- USERS
+INSERT INTO users (id, username, password, email, enabled, role_id)
+VALUES (1, 'admin', '$2a$10$uS5kYVz2EgTb1HvmPiEyPuBHYsIczPpiQZ7j0OPP6YeB/EzAKRw4G', 'admin@gmail.com', true, 1);
+
+INSERT INTO users (id, username, password, email, enabled, role_id)
+VALUES (2, 'nhanvien1', '$2a$10$uS5kYVz2EgTb1HvmPiEyPuBHYsIczPpiQZ7j0OPP6YeB/EzAKRw4G', 'nv1@gmail.com', true, 2);
+
+INSERT INTO users (id, username, password, email, enabled, role_id)
+VALUES (3, 'user1', '$2a$10$uS5kYVz2EgTb1HvmPiEyPuBHYsIczPpiQZ7j0OPP6YeB/EzAKRw4G', 'user1@gmail.com', true, 3);
+
+- TƯƠNG ỨNG VỚI MẬT KHẨU GỐC LÀ: 123456

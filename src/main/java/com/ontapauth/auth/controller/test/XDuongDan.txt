@@ -1,0 +1,5 @@
+http://localhost:8086/admin/dashboard
+
+http://localhost:8086/admin/dashboard
+
+http://localhost:8086/user/profile
