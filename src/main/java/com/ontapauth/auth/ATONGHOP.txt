@@ -110,3 +110,58 @@ INSERT INTO users (id, username, password, email, enabled, role_id)
 VALUES (3, 'user1', '$2a$10$uS5kYVz2EgTb1HvmPiEyPuBHYsIczPpiQZ7j0OPP6YeB/EzAKRw4G', 'user1@gmail.com', true, 3);
 
 - TƯƠNG ỨNG VỚI MẬT KHẨU GỐC LÀ: 123456
+=====================================================================================
+| API            | Ai được quyền truy cập?                             |
+| -------------- | --------------------------------------------------- |
+| `/admin/**`    | Chỉ người có role `ROLE_ADMIN`                      |
+| `/nhanvien/**` | Người có role `ROLE_NHANVIEN` hoặc `ROLE_ADMIN`     |
+| `/user/**`     | Người có `ROLE_USER`, `ROLE_NHANVIEN`, `ROLE_ADMIN` |
+
+
+- Gán quyền role vào trong UserDetails:
+
+CustomUserDetailsService:
+
+@Override
+public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    UserEntity user = userRepository.findByUsername(username)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+    List<GrantedAuthority> authorities = List.of(
+        new SimpleGrantedAuthority(user.getRole().getCode()) // code = "ROLE_ADMIN"
+    );
+
+    return new org.springframework.security.core.userdetails.User(
+        user.getUsername(),
+        user.getPassword(),
+        authorities
+    );
+}
+
+- Cấu hình phân quyền trong security config:
+http
+  .csrf(csrf -> csrf.disable())
+  .authorizeHttpRequests(auth -> auth
+      .requestMatchers("/api/auth/**").permitAll()
+      .requestMatchers("/admin/**").hasRole("ADMIN")
+      .requestMatchers("/nhanvien/**").hasAnyRole("NHANVIEN", "ADMIN")
+      .requestMatchers("/user/**").hasAnyRole("USER", "NHANVIEN", "ADMIN")
+      .anyRequest().authenticated()
+  )
+  .sessionManagement(session -> session
+      .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+  )
+  .authenticationProvider(authenticationProvider())
+  .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+- Kiểm tra JWT có chứa đúng role không:
+
+public String generateToken(String username, Map<String, Object> extraClaims) {
+    return Jwts.builder()
+        .setClaims(extraClaims)
+        .setSubject(username)
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+        .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+        .compact();
+}

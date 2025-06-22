@@ -1,6 +1,6 @@
 package com.ontapauth.auth.dto;
 
-class JwtResponse {
+public class JwtResponse {
   private String token;
 
   public JwtResponse(String token) {

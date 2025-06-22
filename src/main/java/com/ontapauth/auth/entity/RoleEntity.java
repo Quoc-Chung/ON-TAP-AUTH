@@ -26,8 +26,11 @@ public class RoleEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  private String code;
+
   private String name;
 
   @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
   private List<UserEntity> users;
+
 }

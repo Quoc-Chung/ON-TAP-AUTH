@@ -1,5 +1,43 @@
-http://localhost:8086/admin/dashboard
+http://localhost:8086/nhanvien/work
 
 http://localhost:8086/admin/dashboard
 
 http://localhost:8086/user/profile
+
+http://localhost:8086/api/auth/login
+
+{
+   "username": "admin",
+   "password": "123456"
+}
+
+https://jwt.io/
+
+
+@RestController
+@RequestMapping("/admin")
+public class AdminController {
+  @GetMapping("/dashboard")
+  public String adminOnly() {
+    return "Chào ADMIN Nha";
+  }
+}
+
+
+@RestController
+@RequestMapping("/nhanvien")
+public class NhanVienController {
+  @GetMapping("/work")
+  public String employeeOnly() {
+    return "Chào nhân viên";
+  }
+}
+
+@RestController
+@RequestMapping("/user")
+public class UserController {
+  @GetMapping("/profile")
+  public String userOrAbove() {
+    return "Chào người dùng hoặc cao hơn";
+  }
+}
