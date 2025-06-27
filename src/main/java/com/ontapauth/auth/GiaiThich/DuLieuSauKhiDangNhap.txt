@@ -1,0 +1,10 @@
+Sau khi JWT được kiểm tra hợp lệ tại JwtAuthenticationFilter, bạn có đoạn:
+
+UsernamePasswordAuthenticationToken authentication =
+    new UsernamePasswordAuthenticationToken(
+        userDetails,
+        null,
+        userDetails.getAuthorities());
+SecurityContextHolder.getContext().setAuthentication(authentication);
+=> Tức là userDetails (Lấy từ CustomUserDetailsService.loadUserByUsername) sẽ được
+lưu vào Authentication.getPrincial()

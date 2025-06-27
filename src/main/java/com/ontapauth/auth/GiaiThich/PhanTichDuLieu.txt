@@ -1,0 +1,224 @@
+User
+Role (user, nhanvien, admin)
+Permission (GET, POST, PUT, DELETE)
+
+- Các mối quan hệ:
+
+    User ⇔ Role: Nhiều-nhiều
+    Role ⇔ Permission: Nhiều-nhiều
+
+====================================================================================================
+User
+
+@Entity
+public class User {
+  @Id @GeneratedValue
+  private Integer id;
+
+  private String email;
+  private String password;
+
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(name = "user_roles",
+      joinColumns = @JoinColumn(name = "user_id"),
+      inverseJoinColumns = @JoinColumn(name = "role_id"))
+  private Set<Role> roles = new HashSet<>();
+}
+
+
+====================================================================================================
+Role
+
+@Entity
+public class Role {
+  @Id @GeneratedValue
+  private Integer id;
+
+  private String name; // user, nhanvien, admin
+
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(name = "role_permissions",
+      joinColumns = @JoinColumn(name = "role_id"),
+      inverseJoinColumns = @JoinColumn(name = "permission_id"))
+  private Set<Permission> permissions = new HashSet<>();
+}
+
+
+====================================================================================================
+
+@Entity
+public class Permission {
+  @Id @GeneratedValue
+  private Integer id;
+
+  private String name; // GET, POST, PUT, DELETE
+}
+====================================================================================================
+
+
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(name = "user_roles",
+  joinColumns = @JoinColumn(name = "user_id"),
+  inverseJoinColumns = @JoinColumn(name = "role_id"))
+
+- Đây là cách biểu diễn mối quan hệ nhiều - nhiều
+       + Một User có thể có nhiều role
+       + Một role cũng có thể được gán cho nhiều User
+       + Do đó, cần bảng trung gian (join table) để quản lí mối quan hệ này, gọi
+       là user_roles.
+
+- Phân tích chi tiết từng phần:
+
+ @ManyToMany(fetch = FetchType.EAGER)
+ + Chỉ định mối quan hệ giữa hai thực thể.
+ + ManyToMany : Nhiều người dùng -> Nhiều vai trò
+ + : Khi bạn truy vấn 1 User, JPA sẽ tự động truy vấn thêm danh sách Role liên quan đến user đó (load sẵn luôn).
+
+
+Table users
+id
+username
+password
+
+Table roles
+id
+name
+
+Table user_roles
+user_id (FK)
+role_id (FK)
+
+
+@JoinTable(
+    name = "user_roles",
+    joinColumns = @JoinColumn(name = "user_id"),
+    inverseJoinColumns = @JoinColumn(name = "role_id")
+)
+
+CREATE TABLE user_roles (
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+====================================================================================================
+
+INSERT INTO permission (id, name) VALUES (1, 'GET');
+INSERT INTO permission (id, name) VALUES (2, 'POST');
+INSERT INTO permission (id, name) VALUES (3, 'PUT');
+INSERT INTO permission (id, name) VALUES (4, 'DELETE');
+
+
+INSERT INTO role (id, name) VALUES (1, 'USER');
+INSERT INTO role (id, name) VALUES (2, 'NHANVIEN');
+INSERT INTO role (id, name) VALUES (3, 'ADMIN');
+
+
+-- Mật khẩu đều là 123456
+INSERT INTO user (id, username,email, password) VALUES (1,'user1', 'user@example.com', '$2a$12$yFTcLCm5dX9j2Ur3cNhQ8OFyt87lZNSBAb9HyWme1mWwYfaUORIbu');
+INSERT INTO user (id, username,email, password) VALUES (2, 'nhanvien1','nv@example.com', '$2a$12$yFTcLCm5dX9j2Ur3cNhQ8OFyt87lZNSBAb9HyWme1mWwYfaUORIbu');
+INSERT INTO user (id, username,email, password) VALUES (3, 'admin1','admin@example.com', '$2a$12$yFTcLCm5dX9j2Ur3cNhQ8OFyt87lZNSBAb9HyWme1mWwYfaUORIbu');
+
+
+-- user -> USER
+INSERT INTO user_roles (user_id, role_id) VALUES (1, 1);
+
+-- nv -> NHANVIEN
+INSERT INTO user_roles (user_id, role_id) VALUES (2, 2);
+
+-- admin -> ADMIN
+INSERT INTO user_roles (user_id, role_id) VALUES (3, 3);
+
+
+-- USER chỉ có GET
+INSERT INTO role_permissions (role_id, permission_id) VALUES (1, 1);
+
+-- NHANVIEN có GET, POST
+INSERT INTO role_permissions (role_id, permission_id) VALUES (2, 1);
+INSERT INTO role_permissions (role_id, permission_id) VALUES (2, 2);
+
+-- ADMIN có tất cả
+INSERT INTO role_permissions (role_id, permission_id) VALUES (3, 1);
+INSERT INTO role_permissions (role_id, permission_id) VALUES (3, 2);
+INSERT INTO role_permissions (role_id, permission_id) VALUES (3, 3);
+INSERT INTO role_permissions (role_id, permission_id) VALUES (3, 4);
+
+
+
+
+INSERT INTO permission (id, name) VALUES
+(1, 'GET'),
+(2, 'POST'),
+(3, 'PUT'),
+(4, 'DELETE');
+
+INSERT INTO role (id, name) VALUES
+(1, 'USER'),
+(2, 'NHANVIEN'),
+(3, 'ADMIN');
+
+INSERT INTO user (id, username, email, password) VALUES
+(1, 'user1', 'user@example.com', '$2a$12$yFTcLCm5dX9j2Ur3cNhQ8OFyt87lZNSBAb9HyWme1mWwYfaUORIbu'),
+(2, 'nhanvien1', 'nv@example.com', '$2a$12$yFTcLCm5dX9j2Ur3cNhQ8OFyt87lZNSBAb9HyWme1mWwYfaUORIbu'),
+(3, 'admin1', 'admin@example.com', '$2a$12$yFTcLCm5dX9j2Ur3cNhQ8OFyt87lZNSBAb9HyWme1mWwYfaUORIbu');
+
+
+INSERT INTO user_roles (user_id, role_id) VALUES
+(1, 1), -- user1 có vai trò USER
+(2, 2), -- nhanvien1 có vai trò NHANVIEN
+(2, 1), -- nhanvien1 thêm vai trò USER
+(3, 3), -- admin1 có vai trò ADMIN
+(3, 1); -- admin1 thêm vai trò USER
+
+
+
+-- USER chỉ có quyền GET (permission_id = 1)
+INSERT INTO role_permissions (role_id, permission_id) VALUES (1, 1);
+
+-- NHANVIEN có quyền GET, POST (permission_id = 1, 2)
+INSERT INTO role_permissions (role_id, permission_id) VALUES (2, 1);
+INSERT INTO role_permissions (role_id, permission_id) VALUES (2, 2);
+
+-- ADMIN có tất cả quyền: GET, POST, PUT, DELETE (permission_id = 1 → 4)
+INSERT INTO role_permissions (role_id, permission_id) VALUES (3, 1);
+INSERT INTO role_permissions (role_id, permission_id) VALUES (3, 2);
+INSERT INTO role_permissions (role_id, permission_id) VALUES (3, 3);
+INSERT INTO role_permissions (role_id, permission_id) VALUES (3, 4);
+
+====================================================================================================
+<!-- Thư viện JSON Web Token (JWT) -->
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.11.5</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-impl</artifactId>
+    <version>0.11.5</version>
+    <scope>runtime</scope>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-jackson</artifactId> <!-- Dùng Jackson để parse JSON -->
+    <version>0.11.5</version>
+    <scope>runtime</scope>
+</dependency>
+====================================================================================================
+
+/api/admin/products
+GET   	http://localhost:8085/api/admin/products/	            Lấy thông tin sản phẩm (Admin)
+POST	  http://localhost:8085/api/admin/products/	            Tạo sản phẩm mới (Admin)
+PUT   	http://localhost:8085/api/admin/products/{id}    	    Cập nhật sản phẩm theo id (Admin)
+DELETE	http://localhost:8085/api/admin/products/{id}	        Xóa sản phẩm theo id (Admin)
+
+/api/nhanvien/products
+GET   http://localhost:8085/api/nhanvien/products/	Lấy thông tin sản phẩm (Nhân viên)
+POST	http://localhost:8085/api/nhanvien/products/	Tạo sản phẩm mới (Nhân viên)
+PUT	  http://localhost:8085/api/nhanvien/products/	Cập nhật sản phẩm (Nhân viên) (không rõ id, nên không chuẩn REST)
+
+
+/api/users/products
+GET	  http://localhost:8085/api/users/products/   	Lấy thông tin sản phẩm (User)
+POST	http://localhost:8085/api/users/products/	    Gửi thông tin sản phẩm (User)
