@@ -2,19 +2,17 @@ package com.ontapauth.auth.utils;
 
 import com.ontapauth.auth.entity.Role;
 import com.ontapauth.auth.entity.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
 @Component
 public class JwtUtils {
+
   @Value("${jwt.secret}")
   private String jwtSecret;
 
@@ -22,19 +20,33 @@ public class JwtUtils {
   private long jwtExpirationMs;
 
   public String generateToken(User user) {
-    List<String> roles = user.getRoles()
-        .stream()
+    List<String> roles = user.getRoles().stream()
         .map(Role::getName)
-        .collect(Collectors.toList());
+        .map(roleName -> "ROLE_" + roleName)
+        .toList();
+
+    List<String> permissions = user.getRoles().stream()
+        .flatMap(role -> role.getPermissions().stream())
+        .map(p -> "PERM_" + p.getName())
+        .distinct()
+        .toList();
 
     return Jwts.builder()
         .setSubject(user.getUsername())
-        .claim("email", user.getEmail())
         .claim("roles", roles)
+        .claim("permissions", permissions)
         .setIssuedAt(new Date())
         .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
         .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()), SignatureAlgorithm.HS256)
         .compact();
+  }
+
+  public List<String> getRoles(String token) {
+    return getClaimsFromToken(token).get("roles", List.class);
+  }
+
+  public List<String> getPermissions(String token) {
+    return getClaimsFromToken(token).get("permissions", List.class);
   }
 
 
@@ -57,14 +69,6 @@ public class JwtUtils {
 
   public String getUsernameFromJwt(String token) {
     return getClaimsFromToken(token).getSubject();
-  }
-  public String getEmailFromJwt(String token) {
-    return (String) getClaimsFromToken(token).get("email");
-  }
-
-
-  public List<String> getRolesFromJwt(String token) {
-    return (List<String>) getClaimsFromToken(token).get("roles");
   }
 
   public long getIssuedAt(String token) {

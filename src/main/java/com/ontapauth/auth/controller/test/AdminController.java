@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin/products")
+/*- Truy cập được het -*/
 public class AdminController {
 
   @GetMapping("/")

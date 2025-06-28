@@ -1,0 +1,25 @@
+- Thuật toán mã hóa:
+
+Vì jwtSecret là một chuỗi văn bản (String) nhưng JWT cần một SecretKey (dạng mã hóa nhị phân) để thực
+hiện việc ký (sign) và xác thực (verify) token theo chuẩn HMAC (HS256, HS512...).
+
+. signWith(...) yêu cầu một SecretKey dạng mã hóa nhị phân:
+
+.signWWith(chuỗi_nhị_phân,SignatureAlgorithm.HS256)
+
+   + Tham số đầu tiên không phải là chuoi String thông thường.
+
+   + Tham số đó phải là đối tượng kiểu SecretKey , dùng để mã hóa bằng thuật toán HMAC-SHA256
+
+   .signWith(jwtSecret, SignatureAlgorithm.HS256)  ❌ SAI!
+
+   .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()), SignatureAlgorithm.HS256)✅ ĐÚNG !
+
+-  Độ dài tối thiểu của jwt.secret:
+
+      + Với HS256, yêu cầu ít nhất 256-bit = 32 bytes = 32 ký tự.
+
+      + Nếu quá ngắn sẽ báo lỗi như:
+             "The signing key must be at least 256 bits for HS256"
+====================================================================================================
+

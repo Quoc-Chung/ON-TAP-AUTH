@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/users/products")
+/*- Chỉ truy cập được GET -*/
 public class UserController {
 
   @GetMapping("/")
@@ -18,6 +19,6 @@ public class UserController {
     /* - Không có khả năng truy cập -*/
     @PostMapping("/")
     public ResponseEntity<String> postProduct() {
-      return ResponseEntity.ok("Gui thong Tin San Pham được user lấy thành công ");
+      return ResponseEntity.ok("Sua thong Tin San Pham được user sửa thành công ");
     }
 }

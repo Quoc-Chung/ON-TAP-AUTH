@@ -170,7 +170,7 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 (2, 1), -- nhanvien1 thêm vai trò USER
 (3, 3), -- admin1 có vai trò ADMIN
 (3, 1); -- admin1 thêm vai trò USER
-
+s
 
 
 -- USER chỉ có quyền GET (permission_id = 1)

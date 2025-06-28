@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/nhanvien/products")
+/*- Chỉ truy cập được get và post -*/
 public class NhanVienController {
 
   @GetMapping("/")
